@@ -3,20 +3,50 @@ import java.net.*;
 import java.util.LinkedList;
 
 public class ServiceThread extends Thread {
-	private Client client;
+	private String client_id;
+	private Socket socket;
 	private LinkedList<Client> clients;
 
-	public ServiceThread(Client client, LinkedList<Client> clients) {
-		this.client = client;
+	public ServiceThread(Socket socket, LinkedList<Client> clients) {
+		this.socket = socket;
 		this.clients = clients;
 	}
 
 	@Override
 	public void run() {
 		try {
-			Socket socket = client.socket;
 			BufferedReader inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			DataOutputStream outToClient = new DataOutputStream(socket.getOutputStream());
+			
+			Client client;
+			
+			while (true) {
+				String user_id = inFromClient.readLine();
+				boolean taken = false;
+				
+				for (Client user : clients) {
+					if (user.user_id.toLowerCase().equals(user_id.toLowerCase())) {
+						taken = true;
+						break;
+					}
+				}
+
+				if (taken) {
+					outToClient.writeBytes("NO\n");
+				} else {
+					outToClient.writeBytes("YES\n");
+					for (Client user : clients) {
+						DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
+						messageToClient.writeBytes("MSSG\n");
+						messageToClient.writeBytes("User " + user_id + " just joined the server.\n");
+					}
+					client_id = user_id;
+					client = new Client(client_id, socket);
+					clients.add(client);
+					break;
+				}
+			}
+
 			while (true) {
 				String type = inFromClient.readLine();
 				if (type.equals("EXIT")) {
@@ -25,14 +55,14 @@ public class ServiceThread extends Thread {
 					for (Client user : clients) {
 						DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
 						messageToClient.writeBytes("MSSG\n");
-						messageToClient.writeBytes("User " + client.user_id + " left the server.\n");
+						messageToClient.writeBytes("User " + client_id + " left the server.\n");
 					}
 					break;
 				} else if (type.equals("LIST")) {
 					outToClient.writeBytes("LIST\n");
-					outToClient.writeBytes(clients.size()+"\n");
-					for (Client online: clients)
-						outToClient.writeBytes(online.user_id+"\n");
+					outToClient.writeBytes(clients.size() + "\n");
+					for (Client online : clients)
+						outToClient.writeBytes(online.user_id + "\n");
 				} else if (type.equals("MSSG")) {
 					String source = inFromClient.readLine();
 					String destination = inFromClient.readLine();
