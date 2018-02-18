@@ -74,7 +74,7 @@ public class ClientInterface {
 				System.out.println("Enter \"Help\" at any time to review these instructions.\n");
 			} else {
 				String[] info = input.split(":", 2);
-				chat(user_id, info[0].trim().split(" ")[1], 1, info[1].trim());
+				chat(user_id, info[0].trim().split(" ", 2)[1], 1, info[1].trim());
 			}
 		}
 
