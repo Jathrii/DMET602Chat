@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
 
 public class ListenThread extends Thread {
@@ -21,9 +19,21 @@ public class ListenThread extends Thread {
 		try {
 			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			while (alive) {
+				String type = "";
 				if (inFromServer.ready()) {
-					String message = inFromServer.readLine();
-					System.out.println(message);
+					type = inFromServer.readLine();
+					if (type.equals("MSSG")) {
+						String message = inFromServer.readLine();
+						if (message.equals("ERROR")) {
+							System.out.println("There is no user with this user id online.");
+							System.out.println("Enter \"List\" at any time to get a list of connected users.");
+						} else
+							System.out.println(message);
+					} else if (type.equals("LIST")) {
+						int n = Integer.parseInt(inFromServer.readLine());
+						for (int i = 0; i < n; i++)
+							System.out.println(inFromServer.readLine() + " is online!");
+					}
 				}
 			}
 		} catch (UnknownHostException e) {

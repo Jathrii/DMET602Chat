@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 public class ClientInterface {
 	public static final int PORT = 6789;
@@ -18,14 +19,19 @@ public class ClientInterface {
 		return false;
 	}
 
+	private static void getMemberList() throws IOException, ClassNotFoundException {
+		outToServer.writeBytes("LIST\n");
+	}
+
 	private static void chat(String source, String destination, int ttl, String message) throws IOException {
+		outToServer.writeBytes("MSSG\n");
 		outToServer.writeBytes(source + "\n");
 		outToServer.writeBytes(destination + "\n");
 		outToServer.writeBytes("" + ttl + "\n");
 		outToServer.writeBytes(message + "\n");
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
 		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
 		String user_id;
 
@@ -42,7 +48,7 @@ public class ClientInterface {
 		System.out.printf("You're now signed in as %s.\n", user_id);
 		System.out.println("Please enter messages using the following format:");
 		System.out.println("to recipient_id: message\n");
-		System.out.println("Enter \"MemberList\" at any time to get a list of connected users.");
+		System.out.println("Enter \"List\" at any time to get a list of connected users.");
 		System.out.println("Enter \"Quit\" or \"Bye\" at any time to sign out.");
 		System.out.println("Enter \"Help\" at any time to review these instructions.\n");
 
@@ -54,10 +60,12 @@ public class ClientInterface {
 			if (input.toUpperCase().equals("QUIT") || input.toUpperCase().equals("BYE")) {
 				listen.kill();
 				listen.join();
-				chat("EXIT", "", 0, "");
+				outToServer.writeBytes("EXIT");
 				socket.close();
 				inFromUser.close();
 				break;
+			} else if (input.toUpperCase().equals("LIST")) {
+				getMemberList();
 			} else if (input.toUpperCase().equals("HELP")) {
 				System.out.println("Please enter messages using the following format:");
 				System.out.println("to recipient_id: message\n");

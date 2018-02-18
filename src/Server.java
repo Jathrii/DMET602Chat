@@ -17,7 +17,7 @@ public class Server {
 			String user_id = inFromClient.readLine();
 			boolean taken = false;
 			for (Client client : clients) {
-				if (client.user_id.equals(user_id)) {
+				if (client.user_id.toLowerCase().equals(user_id.toLowerCase())) {
 					taken = true;
 					break;
 				}
@@ -27,6 +27,11 @@ public class Server {
 				connection.close();
 			} else {
 				outToClient.writeBytes("YES\n");
+				for (Client user : clients) {
+					DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
+					messageToClient.writeBytes("MSSG\n");
+					messageToClient.writeBytes("User " + user_id + " just joined the server.\n");
+				}
 				Client client = new Client(user_id, connection);
 				clients.add(client);
 				ServiceThread newUser = new ServiceThread(client, clients);
