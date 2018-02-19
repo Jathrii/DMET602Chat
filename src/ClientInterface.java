@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.util.*;
 
 public class ClientInterface {
 	public static final int PORT = 6789;
@@ -10,6 +9,8 @@ public class ClientInterface {
 	private static BufferedReader inFromServer;
 
 	private static boolean join(String user_id) throws IOException {
+		if (user_id.toUpperCase().equals("IGNORE"))
+			return false;
 		outToServer = new DataOutputStream(socket.getOutputStream());
 		outToServer.writeBytes(user_id + "\n");
 		String response = inFromServer.readLine();
@@ -43,6 +44,19 @@ public class ClientInterface {
 			inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			System.out.println("Please enter your user id for this session:\n");
 			user_id = inFromUser.readLine().trim();
+			if (user_id.equals("")) {
+				System.out.println("Your user id must be at least 1 character long.");
+				user_id = "IGNORE";
+			} else if (user_id.toUpperCase().equals("LIST")) {
+				System.out.println("Your user id can't be \"List\".");
+				user_id = "IGNORE";
+			} else if (user_id.toUpperCase().equals("QUIT")) {
+				System.out.println("Your user id can't be \"Quit\".");
+				user_id = "IGNORE";
+			} else if (user_id.toUpperCase().equals("HELP")) {
+				System.out.println("Your user id can't be \"Help\".");
+				user_id = "IGNORE";
+			}
 		} while (!join(user_id));
 
 		System.out.printf("You're now signed in as %s.\n", user_id);
@@ -57,6 +71,9 @@ public class ClientInterface {
 
 		while (true) {
 			String input = inFromUser.readLine().trim();
+			if (input.equals(""))
+				continue;
+			
 			if (input.toUpperCase().equals("QUIT") || input.toUpperCase().equals("BYE")) {
 				listen.kill();
 				listen.join();
