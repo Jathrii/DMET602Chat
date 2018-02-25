@@ -2,7 +2,6 @@ import java.io.*;
 import java.net.*;
 
 public class ClientInterface {
-	public static final int PORT = 6789;
 	public static final String IP = "127.0.0.1";
 	private static Socket socket;
 	private static DataOutputStream outToServer;
@@ -12,6 +11,7 @@ public class ClientInterface {
 		if (user_id.toUpperCase().equals("IGNORE"))
 			return false;
 		outToServer = new DataOutputStream(socket.getOutputStream());
+		outToServer.writeBytes("CLIENT\n");
 		outToServer.writeBytes(user_id + "\n");
 		String response = inFromServer.readLine();
 		if (response.equals("YES"))
@@ -28,7 +28,7 @@ public class ClientInterface {
 		outToServer.writeBytes("MSSG\n");
 		outToServer.writeBytes(source + "\n");
 		outToServer.writeBytes(destination + "\n");
-		outToServer.writeBytes("" + ttl + "\n");
+		outToServer.writeBytes(ttl + "\n");
 		outToServer.writeBytes(message + "\n");
 	}
 
@@ -37,6 +37,24 @@ public class ClientInterface {
 		String user_id;
 
 		System.out.println("Welcome the DMET 602 chatting application!\n");
+
+		int PORT = 0;
+
+		while (true) {
+			System.out.println("Please choose the server you'd like to connect to.");
+			System.out.println("Enter 1 for Server 1.");
+			System.out.println("Enter 2 for Server 2.");
+			System.out.println("Chosen server:");
+			String choice = inFromUser.readLine().trim();
+			if (choice.equals("1")) {
+				PORT = Network.PORT1;
+				break;
+			} else if (choice.equals("2")) {
+				PORT = Network.PORT2;
+				break;
+			} else
+				System.out.println("Invalid server number!");
+		}
 
 		do {
 			socket = new Socket(IP, PORT);
@@ -73,7 +91,7 @@ public class ClientInterface {
 			String input = inFromUser.readLine().trim();
 			if (input.equals(""))
 				continue;
-			
+
 			if (input.toUpperCase().equals("QUIT") || input.toUpperCase().equals("BYE")) {
 				listen.kill();
 				listen.join();
@@ -91,7 +109,7 @@ public class ClientInterface {
 				System.out.println("Enter \"Help\" at any time to review these instructions.\n");
 			} else {
 				String[] info = input.split(":", 2);
-				chat(user_id, info[0].trim().split(" ", 2)[1], 1, info[1].trim());
+				chat(user_id, info[0].trim().split(" ", 2)[1], 3, info[1].trim());
 			}
 		}
 

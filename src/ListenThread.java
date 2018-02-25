@@ -23,17 +23,13 @@ public class ListenThread extends Thread {
 				if (inFromServer.ready()) {
 					type = inFromServer.readLine();
 					if (type.equals("MSSG")) {
-						String message = inFromServer.readLine();
-						if (message.equals("ERROR")) {
-							System.out.println("There is no user with this user id online.");
-							System.out.println("Enter \"List\" at any time to get a list of connected users.");
-						} else
-							System.out.println(message);
+						System.out.println(inFromServer.readLine());
 					} else if (type.equals("LIST")) {
 						int n = Integer.parseInt(inFromServer.readLine());
 						for (int i = 0; i < n; i++)
 							System.out.println(inFromServer.readLine() + " is online!");
-					}
+					} else
+						System.out.println("Unknown Network Communication.");
 				}
 			}
 		} catch (UnknownHostException e) {
