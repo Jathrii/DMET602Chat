@@ -34,16 +34,13 @@ public class ServiceThread extends Thread {
 
 				while (true) {
 					String request = inFromClient.readLine();
-					System.out.println("At remote: " + request);
 					if (request.equals("FORWARD")) {
 						String source = inFromClient.readLine();
 						String destination = inFromClient.readLine();
 						int ttl = Integer.parseInt(inFromClient.readLine());
 						String message = inFromClient.readLine();
 
-						System.out.println("ttl remote: " + ttl);
 						if (ttl == 0) {
-							System.out.println("Should be done.");
 							boolean exists = false;
 							for (Client user : clients)
 								if (user.user_id.toLowerCase().equals(source.toLowerCase())) {
@@ -64,7 +61,6 @@ public class ServiceThread extends Thread {
 							}
 							continue;
 						}
-						System.out.println("or should it?");
 
 						boolean exists = false;
 						for (Client user : clients)
@@ -77,13 +73,11 @@ public class ServiceThread extends Thread {
 							}
 						if (!exists) {
 							ttl--;
-							System.out.println("here remote");
 							outToNetwork.writeBytes("FORWARD\n");
 							outToNetwork.writeBytes(source + "\n");
 							outToNetwork.writeBytes(destination + "\n");
 							outToNetwork.writeBytes("" + ttl + "\n");
 							outToNetwork.writeBytes(message + "\n");
-							System.out.println("sent remote");
 						}
 					} else if (request.equals("LIST")) {
 						outToClient.writeBytes(clients.size() + "\n");
@@ -165,15 +159,11 @@ public class ServiceThread extends Thread {
 					} else if (type.equals("MSSG")) {
 
 						String source = inFromClient.readLine();
-						System.out.println("origin source: " + source);
-						System.out.println(source);
 						String destination = inFromClient.readLine();
 						int ttl = Integer.parseInt(inFromClient.readLine());
 						String message = inFromClient.readLine();
 
-						System.out.println("ttl origin: " + ttl);
 						if (ttl == 0) {
-							System.out.println("What's going on?");
 							outToClient.writeBytes("MSSG\n");
 							outToClient.writeBytes("User " + destination + " could not be reached.\n");
 							continue;
@@ -190,15 +180,11 @@ public class ServiceThread extends Thread {
 							}
 						if (!exists) {
 							ttl--;
-							System.out.println("here origin");
 							outToNetwork.writeBytes("FORWARD\n");
 							outToNetwork.writeBytes(source + "\n");
 							outToNetwork.writeBytes(destination + "\n");
 							outToNetwork.writeBytes("" + ttl + "\n");
 							outToNetwork.writeBytes(message + "\n");
-							System.out.println("sent origin");
-							// break;
-							// continue;
 						}
 
 					} else
