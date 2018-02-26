@@ -34,6 +34,7 @@ public class ServiceThread extends Thread {
 
 				while (true) {
 					String request = inFromClient.readLine();
+					System.out.println("At remote: " + request);
 					if (request.equals("FORWARD")) {
 						String source = inFromClient.readLine();
 						String destination = inFromClient.readLine();
@@ -41,8 +42,12 @@ public class ServiceThread extends Thread {
 						String message = inFromClient.readLine();
 
 						ttl--;
-						if (ttl == 0)
+						System.out.println("ttl remote: " + ttl);
+						if (ttl == 0) {
+							System.out.println("Should be done.");
 							continue;
+						}
+						System.out.println("or should it?");
 
 						boolean exists = false;
 						for (Client user : clients)
@@ -54,11 +59,13 @@ public class ServiceThread extends Thread {
 								break;
 							}
 						if (!exists) {
-							outToClient.writeBytes("FORWARD\n");
-							outToClient.writeBytes(source + "\n");
-							outToClient.writeBytes(destination + "\n");
-							outToClient.writeBytes("" + ttl + "\n");
-							outToClient.writeBytes(message + "\n");
+							System.out.println("here remote");
+							outToNetwork.writeBytes("FORWARD\n");
+							outToNetwork.writeBytes(source + "\n");
+							outToNetwork.writeBytes(destination + "\n");
+							outToNetwork.writeBytes("" + ttl + "\n");
+							outToNetwork.writeBytes(message + "\n");
+							System.out.println("sent remote");
 						}
 					} else if (request.equals("LIST")) {
 						outToClient.writeBytes(clients.size() + "\n");
@@ -138,30 +145,42 @@ public class ServiceThread extends Thread {
 							outToClient.writeBytes(inFromNetwork.readLine() + "\n");
 
 					} else if (type.equals("MSSG")) {
-						String source = inFromClient.readLine();
-						String destination = inFromClient.readLine();
-						int ttl = Integer.parseInt(inFromClient.readLine());
-						String message = inFromClient.readLine();
+						while (true) {
+							String source = inFromClient.readLine();
+							System.out.println("origin source: " + source);
+							System.out.println(source);
+							String destination = inFromClient.readLine();
+							int ttl = Integer.parseInt(inFromClient.readLine());
+							String message = inFromClient.readLine();
 
-						ttl--;
-						if (ttl == 0)
-							continue;
-
-						boolean exists = false;
-						for (Client user : clients)
-							if (user.user_id.toLowerCase().equals(destination.toLowerCase())) {
-								exists = true;
-								DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
-								messageToClient.writeBytes("MSSG\n");
-								messageToClient.writeBytes(source + ": " + message + "\n");
+							ttl--;
+							System.out.println("ttl origin: " + ttl);
+							if (ttl == 0) {
+								System.out.println("What's going on?");
 								break;
 							}
-						if (!exists) {
-							outToNetwork.writeBytes("FORWARD\n");
-							outToNetwork.writeBytes(source + "\n");
-							outToNetwork.writeBytes(destination + "\n");
-							outToNetwork.writeBytes("" + ttl + "\n");
-							outToNetwork.writeBytes(message + "\n");
+
+							boolean exists = false;
+							for (Client user : clients)
+								if (user.user_id.toLowerCase().equals(destination.toLowerCase())) {
+									exists = true;
+									DataOutputStream messageToClient = new DataOutputStream(
+											user.socket.getOutputStream());
+									messageToClient.writeBytes("MSSG\n");
+									messageToClient.writeBytes(source + ": " + message + "\n");
+									break;
+								}
+							if (!exists) {
+								System.out.println("here origin");
+								outToNetwork.writeBytes("FORWARD\n");
+								outToNetwork.writeBytes(source + "\n");
+								outToNetwork.writeBytes(destination + "\n");
+								outToNetwork.writeBytes("" + ttl + "\n");
+								outToNetwork.writeBytes(message + "\n");
+								System.out.println("sent origin");
+								break;
+								//continue;
+							}
 						}
 					} else
 						System.out.println("Unknown Client Communication. " + type);
