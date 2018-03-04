@@ -90,7 +90,7 @@ public class ServiceThread extends Thread {
 							messageToClient.writeBytes("MSSG\n");
 							messageToClient.writeBytes(
 									"User " + new_user + " (Server " + (socket.getLocalPort() == Network.PORT1 ? 2 : 1)
-											+ ") " + " just joined the server.\n");
+											+ ") " + " just joined the network.\n");
 						}
 					} else if (request.equals("EXIT")) {
 						String old_user_id = inFromClient.readLine();
@@ -102,7 +102,8 @@ public class ServiceThread extends Thread {
 							}
 							DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
 							messageToClient.writeBytes("MSSG\n");
-							messageToClient.writeBytes("User " + old_user_id + " left the network.\n");
+							messageToClient.writeBytes("User " + old_user_id + " (Server "
+									+ (socket.getLocalPort() == Network.PORT1 ? 2 : 1) + ") left the network.\n");
 						}
 						clients.remove(old_user);
 					} else
@@ -114,8 +115,6 @@ public class ServiceThread extends Thread {
 				while (true) {
 					String user_id = inFromClient.readLine();
 					boolean takenLocal = false;
-
-					System.out.println("user id in: " + user_id);
 
 					for (Client user : clients)
 						if (user.user_id.toLowerCase().equals(user_id.toLowerCase())) {
@@ -166,7 +165,8 @@ public class ServiceThread extends Thread {
 						for (Client user : clients) {
 							DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
 							messageToClient.writeBytes("MSSG\n");
-							messageToClient.writeBytes("User " + client_id + " left the server.\n");
+							messageToClient.writeBytes("User " + client_id + " (Server "
+									+ (socket.getLocalPort() == Network.PORT1 ? 1 : 2) + ") left the network.\n");
 						}
 						outToNetwork.writeBytes("EXIT\n");
 						outToNetwork.writeBytes(client_id + "\n");
