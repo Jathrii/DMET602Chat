@@ -93,12 +93,18 @@ public class ServiceThread extends Thread {
 											+ ") " + " just joined the server.\n");
 						}
 					} else if (request.equals("EXIT")) {
-						String old_user = inFromClient.readLine();
+						String old_user_id = inFromClient.readLine();
+						Client old_user = null;
 						for (Client user : clients) {
+							if (user.user_id.toLowerCase().equals(old_user_id.toLowerCase())) {
+								old_user = user;
+								continue;
+							}
 							DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
 							messageToClient.writeBytes("MSSG\n");
-							messageToClient.writeBytes("User " + old_user + " left the server.\n");
+							messageToClient.writeBytes("User " + old_user_id + " left the network.\n");
 						}
+						clients.remove(old_user);
 					} else
 						System.out.println("Unkown Network Communication. " + request);
 				}
@@ -107,32 +113,47 @@ public class ServiceThread extends Thread {
 
 				while (true) {
 					String user_id = inFromClient.readLine();
-					boolean taken = false;
+					boolean takenLocal = false;
 
-					for (Client user : clients) {
+					System.out.println("user id in: " + user_id);
+
+					for (Client user : clients)
 						if (user.user_id.toLowerCase().equals(user_id.toLowerCase())) {
-							taken = true;
+							takenLocal = true;
 							break;
 						}
-					}
 
-					if (taken) {
+					if (takenLocal) {
 						outToClient.writeBytes("NO\n");
 					} else {
-						outToClient.writeBytes("YES\n");
-						for (Client user : clients) {
-							DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
-							messageToClient.writeBytes("MSSG\n");
-							messageToClient.writeBytes(
-									"User " + user_id + " (Server " + (socket.getLocalPort() == Network.PORT1 ? 1 : 2)
-											+ ") " + " just joined the network.\n");
+						outToNetwork.writeBytes("LIST\n");
+						int n = Integer.parseInt(inFromNetwork.readLine());
+						boolean takenRemote = false;
+
+						for (int i = 0; i < n; i++)
+							if (inFromNetwork.readLine().toLowerCase().equals(user_id.toLowerCase())) {
+								takenRemote = true;
+								break;
+							}
+
+						if (takenRemote)
+							outToClient.writeBytes("NO\n");
+						else {
+							outToClient.writeBytes("YES\n");
+							for (Client user : clients) {
+								DataOutputStream messageToClient = new DataOutputStream(user.socket.getOutputStream());
+								messageToClient.writeBytes("MSSG\n");
+								messageToClient.writeBytes("User " + user_id + " (Server "
+										+ (socket.getLocalPort() == Network.PORT1 ? 1 : 2) + ") "
+										+ " just joined the network.\n");
+							}
+							client_id = user_id;
+							client = new Client(client_id, socket);
+							clients.add(client);
+							outToNetwork.writeBytes("JOIN\n");
+							outToNetwork.writeBytes(client_id + "\n");
+							break;
 						}
-						client_id = user_id;
-						client = new Client(client_id, socket);
-						clients.add(client);
-						outToNetwork.writeBytes("JOIN\n");
-						outToNetwork.writeBytes(client_id + "\n");
-						break;
 					}
 
 				}
