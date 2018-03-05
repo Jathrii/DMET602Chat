@@ -52,7 +52,6 @@ public class ServiceThread extends Thread {
 									break;
 								}
 							if (!exists) {
-								ttl++;
 								outToNetwork.writeBytes("FORWARD\n");
 								outToNetwork.writeBytes(source + "\n");
 								outToNetwork.writeBytes(destination + "\n");
